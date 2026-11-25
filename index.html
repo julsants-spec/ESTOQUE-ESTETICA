@@ -55,6 +55,16 @@ dialog h2{margin:0 0 14px}
 .busca-lbl{display:block;font-size:.9rem;color:var(--mut);margin-bottom:4px}
 .busca{display:block;width:100%;padding:12px 14px;border:2px solid var(--ac);border-radius:10px;background:var(--card);color:var(--tx);font-size:1rem}
 footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
+.nst{font-family:system-ui,sans-serif;font-size:.85rem;margin:8px 0 0;color:var(--mut)}
+.nst.on{color:var(--ok)}.nst.err{color:var(--bad)}
+#dnuvem{width:min(560px,94vw)}
+#dnuvem ol{padding-left:20px;margin:0 0 12px;font-family:system-ui,sans-serif;font-size:.9rem}
+#dnuvem li{margin:4px 0}
+#dnuvem textarea{width:100%;min-height:110px;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:.8rem/1.4 ui-monospace,Menlo,Consolas,monospace}
+#dnuvem pre{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;font-size:.75rem;overflow:auto;white-space:pre-wrap;margin:4px 0 12px}
+#dnuvem .msg{font-family:system-ui,sans-serif;font-size:.9rem;min-height:1.3em;color:var(--bad);margin:8px 0 0}
+#dnuvem .sec{display:none}#dnuvem .sec.show{display:block}
+#dnuvem p{font-family:system-ui,sans-serif;font-size:.92rem;margin:0 0 10px}
 #rel{display:none}
 @media print{
   @page{size:A4;margin:14mm 12mm 16mm;@bottom-center{content:"Página " counter(page) " de " counter(pages);font:10px system-ui,sans-serif;color:#777}}
@@ -104,6 +114,7 @@ footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
 <header>
   <h1>Controle de Estoque</h1>
   <p>Produtos capilares, corporais e faciais, com aviso de validade.</p>
+  <p class="nst" id="nst"></p>
 </header>
 <main>
   <div id="alerts"></div>
@@ -119,6 +130,7 @@ footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
     <button class="sec" id="exp">Exportar backup</button>
     <button class="sec" id="imp">Importar backup</button>
     <button class="sec" id="notif">Ativar notificações</button>
+    <button class="sec" id="nuvem">Sincronização na nuvem</button>
     <input type="file" id="impf" accept="application/json" hidden>
   </footer>
 </main>
@@ -154,6 +166,56 @@ footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
   </form>
 </dialog>
 
+<dialog id="dnuvem">
+  <h2>Sincronização na nuvem</h2>
+
+  <div class="sec" id="s-cfg">
+    <p>Faça isto uma vez (é gratuito). Depois, o mesmo estoque aparece no notebook e no celular.</p>
+    <ol>
+      <li>Em <b>console.firebase.google.com</b>, crie um projeto (pode desligar o Google Analytics).</li>
+      <li><b>Build › Authentication › Começar</b> › aba “Método de login” › ative <b>E-mail/senha</b>.</li>
+      <li><b>Build › Firestore Database › Criar banco de dados</b> (modo produção). Na aba <b>Regras</b>, cole o texto abaixo e clique em Publicar:</li>
+    </ol>
+    <pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /usuarios/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}</pre>
+    <ol start="4">
+      <li><b>Configurações do projeto (engrenagem) › Seus apps › ícone Web (&lt;/&gt;)</b>: registre o app e copie o trecho <b>firebaseConfig</b>. Cole aqui:</li>
+    </ol>
+    <textarea id="cfgtxt" placeholder='const firebaseConfig = { apiKey: "...", authDomain: "...", projectId: "...", ... };'></textarea>
+    <p class="msg" id="m-cfg"></p>
+    <div class="act"><button type="button" class="sec" data-fechar>Fechar</button><button type="button" class="pri" id="cfgsalvar">Salvar configuração</button></div>
+  </div>
+
+  <div class="sec" id="s-login">
+    <p>Entre com o mesmo e-mail e senha no notebook e no celular. Se for a primeira vez, clique em “Criar conta”.</p>
+    <div class="f">
+      <label>E-mail<input type="email" id="lemail" autocomplete="username"></label>
+      <label>Senha (mínimo 6 caracteres)<input type="password" id="lsenha" autocomplete="current-password"></label>
+    </div>
+    <p class="msg" id="m-login"></p>
+    <div class="act">
+      <button type="button" class="sec" id="lcfg">Trocar configuração</button>
+      <button type="button" class="sec" id="lcriar">Criar conta</button>
+      <button type="button" class="pri" id="lentrar">Entrar</button>
+    </div>
+  </div>
+
+  <div class="sec" id="s-ok">
+    <p id="okinfo"></p>
+    <p style="color:var(--mut)">Tudo que você cadastrar, editar ou excluir aqui aparece nos outros aparelhos conectados. Sem internet, o app continua funcionando e sincroniza quando a conexão voltar.</p>
+    <div class="act"><button type="button" class="sec" data-fechar>Fechar</button><button type="button" class="sec del" id="sair">Sair da nuvem</button></div>
+  </div>
+</dialog>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 const KEY="estoque_produtos_v1", DIAS_AVISO=30;
 let itens=[], filtro="Todos", editId=null, fotoAtual="";
@@ -248,9 +310,10 @@ $("foto").onchange=async e=>{
 };
 $("form").onsubmit=e=>{
   const o={nome:$("nome").value.trim(),cod:$("cod").value.trim(),cat:$("cat").value,marca:$("marca").value.trim(),tipo:$("tipo").value.trim(),val:$("val").value,qtd:Math.max(0,parseInt($("qtd").value)||0),foto:fotoAtual};
-  if(editId){Object.assign(itens.find(x=>x.id===editId),o)}
-  else itens.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),...o});
-  salvar();render();notificar();
+  let it;
+  if(editId){it=itens.find(x=>x.id===editId);Object.assign(it,o)}
+  else{it={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),...o};itens.push(it)}
+  salvar();render();notificar();nuvemSet(it);
 };
 $("cancel").onclick=()=>$("dlg").close();
 $("novo").onclick=()=>abrir();
@@ -263,8 +326,8 @@ $("list").onclick=e=>{
   if(a==="mais")i.qtd++;
   else if(a==="menos")i.qtd=Math.max(0,i.qtd-1);
   else if(a==="edit")return abrir(i.id);
-  else if(a==="del"){if(!confirm("Excluir “"+i.nome+"”?"))return;itens=itens.filter(x=>x!==i)}
-  salvar();render();
+  else if(a==="del"){if(!confirm("Excluir “"+i.nome+"”?"))return;itens=itens.filter(x=>x!==i);salvar();render();return nuvemDel(i.id)}
+  salvar();render();nuvemSet(i);
 };
 
 $("pdf").onclick=()=>{
@@ -279,11 +342,11 @@ $("pdf").onclick=()=>{
     const cod=(i.cod||"").trim();
     if(!cod)return; /* só soma produtos que têm código */
     const k=norm(cod);
-    const x=g[k]||(g[k]={cod:cod,nomes:new Set(),locais:{},qtd:0});
-    x.nomes.add(i.nome.trim());x.locais[i.cat]=(x.locais[i.cat]||0)+i.qtd;x.qtd+=i.qtd;
+    const x=g[k]||(g[k]={cod:cod,nomes:new Set(),locais:{},vals:[],reg:0,qtd:0});
+    x.nomes.add(i.nome.trim());x.locais[i.cat]=(x.locais[i.cat]||0)+i.qtd;x.vals.push({v:i.val,q:i.qtd});x.reg++;x.qtd+=i.qtd;
   });
-  /* só entram códigos que estão em mais de um local (categoria) */
-  const ks=Object.keys(g).filter(k=>Object.keys(g[k].locais).length>1)
+  /* só entram códigos que aparecem em mais de um cadastro (mesmo local ou locais diferentes) */
+  const ks=Object.keys(g).filter(k=>g[k].reg>1)
     .sort((a,b)=>g[a].cod.localeCompare(g[b].cod,"pt-BR",{numeric:true}));
   const temFoto=lista.some(i=>i.foto);
   const un=lista.reduce((t,i)=>t+i.qtd,0);
@@ -309,9 +372,9 @@ $("pdf").onclick=()=>{
   </div>
   <h2>Lista detalhada</h2>
   <table><thead><tr>${temFoto?"<th></th>":""}<th>Código</th><th>Produto</th><th>Categoria</th><th>Validade</th><th>Situação</th><th class="n">Qtd</th></tr></thead><tbody>${linhas}</tbody></table>
-  ${ks.length?`<h2>Soma de produtos com o mesmo código em locais diferentes</h2>
-  <table><thead><tr><th>Código</th><th>Produto</th><th>Onde está (quantidade)</th><th class="n">Total</th></tr></thead><tbody>`+
-  ks.map(k=>`<tr><td>${esc(g[k].cod)}</td><td class="nm">${[...g[k].nomes].map(esc).join(", ")}</td><td>${["Capilar","Corporal","Facial"].filter(c=>g[k].locais[c]!=null).map(c=>`<span class="loc cat-${c}">${c}: ${g[k].locais[c]}</span>`).join("")}</td><td class="n">${g[k].qtd}</td></tr>`).join("")+
+  ${ks.length?`<h2>Soma de produtos com o mesmo código</h2>
+  <table><thead><tr><th>Código</th><th>Produto</th><th>Onde está (quantidade)</th><th>Validades</th><th class="n">Total</th></tr></thead><tbody>`+
+  ks.map(k=>`<tr><td>${esc(g[k].cod)}</td><td class="nm">${[...g[k].nomes].map(esc).join(", ")}</td><td>${["Capilar","Corporal","Facial"].filter(c=>g[k].locais[c]!=null).map(c=>`<span class="loc cat-${c}">${c}: ${g[k].locais[c]}</span>`).join("")}</td><td class="mut">${g[k].vals.sort((a,b)=>a.v.localeCompare(b.v)).map(x=>fmt(x.v)+" ("+x.q+")").join("<br>")}</td><td class="n">${g[k].qtd}</td></tr>`).join("")+
   `</tbody></table>`:""}
   <p class="rodape">Controle de Estoque · relatório gerado em ${hoje}</p>`;
   setTimeout(()=>window.print(),100);
@@ -326,7 +389,11 @@ $("impf").onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   try{const d=JSON.parse(await f.text());
     if(!Array.isArray(d))throw 0;
-    if(confirm("Substituir o estoque atual pelo backup?")){itens=d;salvar();render()}
+    if(confirm("Substituir o estoque atual pelo backup?")){
+      const antigos=itens;
+      itens=d.filter(i=>i&&i.nome).map(i=>({...i,id:i.id||Date.now().toString(36)+Math.random().toString(36).slice(2,6)}));
+      salvar();render();nuvemSubstituir(antigos,itens);
+    }
   }catch(_){alert("Arquivo de backup inválido.")}
   e.target.value="";
 };
@@ -342,7 +409,120 @@ $("notif").onclick=async()=>{
   if(p==="granted")notificar();else alert("Notificações não permitidas. Os avisos continuam aparecendo no topo da página.");
 };
 
-carregar();render();notificar();
+/* ===== Sincronização na nuvem (Firebase) ===== */
+const CFGKEY="estoque_fb_cfg";
+let db=null,au=null,uid=null,email="",unsub=null,estadoNuvem="";
+
+function cfgLer(){try{return JSON.parse(localStorage.getItem(CFGKEY))}catch(e){return null}}
+function colecao(){return db.collection("usuarios").doc(uid).collection("produtos")}
+function msgErro(e){
+  const c=(e&&e.code)||"";
+  if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found","auth/invalid-login-credentials"].includes(c))return "E-mail ou senha incorretos.";
+  if(c==="auth/email-already-in-use")return "Esse e-mail já tem conta. Clique em “Entrar”.";
+  if(c==="auth/weak-password")return "A senha precisa ter pelo menos 6 caracteres.";
+  if(c==="auth/invalid-email")return "E-mail inválido.";
+  if(c==="auth/network-request-failed")return "Sem conexão com a internet.";
+  if(c==="auth/too-many-requests")return "Muitas tentativas. Aguarde um pouco e tente de novo.";
+  if(c==="auth/operation-not-allowed")return "Ative “E-mail/senha” em Authentication > Método de login no Firebase.";
+  if(c==="auth/api-key-not-valid"||c==="auth/invalid-api-key")return "A configuração colada está incorreta (apiKey inválida).";
+  if(c==="permission-denied")return "Sem permissão no Firestore. Confira se as regras foram publicadas.";
+  return (e&&e.message)||"Erro desconhecido.";
+}
+function statusNuvem(){
+  const el=$("nst");el.className="nst";
+  if(!cfgLer()){el.textContent="Salvo só neste aparelho. Ative a sincronização na nuvem para ver o mesmo estoque no celular e no notebook."}
+  else if(typeof firebase==="undefined"){el.textContent="Não foi possível carregar o Firebase (sem internet?). Usando os dados deste aparelho.";el.classList.add("err")}
+  else if(!uid){el.textContent="Nuvem configurada, mas você não entrou. Clique em “Sincronização na nuvem”."}
+  else if(estadoNuvem==="erro"){el.textContent="Erro de sincronização com a nuvem.";el.classList.add("err")}
+  else{el.textContent="☁ Sincronizado como "+email;el.classList.add("on")}
+}
+function erroNuvem(e){console.error(e);estadoNuvem="erro";statusNuvem();$("nst").textContent="Erro na nuvem: "+msgErro(e)}
+async function lote(ops){
+  for(let k=0;k<ops.length;k+=400){
+    const b=db.batch();ops.slice(k,k+400).forEach(f=>f(b));await b.commit();
+  }
+}
+function nuvemSet(i){if(uid)colecao().doc(i.id).set(i).catch(erroNuvem)}
+function nuvemDel(id){if(uid)colecao().doc(id).delete().catch(erroNuvem)}
+function nuvemSubstituir(antigos,novos){
+  if(!uid)return;
+  const nv=new Set(novos.map(i=>i.id)),col=colecao();
+  const ops=antigos.filter(i=>!nv.has(i.id)).map(i=>b=>b.delete(col.doc(i.id)))
+    .concat(novos.map(i=>b=>b.set(col.doc(i.id),i)));
+  lote(ops).catch(erroNuvem);
+}
+async function aoMudarUsuario(u){
+  if(unsub){unsub();unsub=null}
+  uid=u?u.uid:null;email=u?u.email:"";estadoNuvem="";statusNuvem();
+  if(!u)return;
+  const meu=uid,col=colecao(),flag="estoque_migrado_"+uid;
+  if(!localStorage.getItem(flag)){
+    try{
+      /* primeira vez neste aparelho: envia para a nuvem o que só existe aqui */
+      const snap=await col.get();
+      const ids=new Set(snap.docs.map(d=>d.id));
+      await lote(itens.filter(i=>!ids.has(i.id)).map(i=>b=>b.set(col.doc(i.id),i)));
+      localStorage.setItem(flag,"1");
+    }catch(e){return erroNuvem(e)}
+  }
+  if(meu!==uid)return;
+  unsub=col.onSnapshot(s=>{
+    itens=s.docs.map(d=>d.data());
+    salvar();render();estadoNuvem="ok";statusNuvem();
+  },erroNuvem);
+}
+function iniciarNuvem(){
+  const c=cfgLer();
+  if(!c||typeof firebase==="undefined"){statusNuvem();return}
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(c);
+    au=firebase.auth();db=firebase.firestore();
+    db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+    au.onAuthStateChanged(aoMudarUsuario);
+  }catch(e){erroNuvem(e)}
+}
+function mostrar(sec){
+  ["cfg","login","ok"].forEach(s=>$("s-"+s).classList.toggle("show",s===sec));
+  ["m-cfg","m-login"].forEach(m=>$(m).textContent="");
+}
+function abrirNuvem(){
+  if(!cfgLer())mostrar("cfg");
+  else if(typeof firebase==="undefined"){mostrar("cfg");$("m-cfg").textContent="Não foi possível carregar o Firebase. Verifique a internet e recarregue a página."}
+  else if(!uid)mostrar("login");
+  else{mostrar("ok");$("okinfo").innerHTML="Conectado como <b>"+esc(email)+"</b>."}
+  $("dnuvem").showModal();
+}
+$("nuvem").onclick=abrirNuvem;
+document.querySelectorAll("[data-fechar]").forEach(b=>b.onclick=()=>$("dnuvem").close());
+$("cfgsalvar").onclick=()=>{
+  const t=$("cfgtxt").value,c={};
+  for(const m of t.matchAll(/["']?(\w+)["']?\s*:\s*["']([^"']*)["']/g))c[m[1]]=m[2];
+  if(!c.apiKey||!c.projectId||!c.appId){$("m-cfg").textContent="Não encontrei apiKey, projectId e appId no texto colado. Cole o bloco firebaseConfig completo.";return}
+  if(!c.authDomain)c.authDomain=c.projectId+".firebaseapp.com";
+  localStorage.setItem(CFGKEY,JSON.stringify(c));
+  location.reload();
+};
+$("lcfg").onclick=()=>{localStorage.removeItem(CFGKEY);location.reload()};
+async function entrar(criar){
+  const m=$("m-login");m.textContent="";
+  const e=$("lemail").value.trim(),s=$("lsenha").value;
+  if(!e||!s){m.textContent="Preencha e-mail e senha.";return}
+  try{
+    if(criar)await au.createUserWithEmailAndPassword(e,s);
+    else await au.signInWithEmailAndPassword(e,s);
+    $("lsenha").value="";$("dnuvem").close();
+  }catch(err){m.textContent=msgErro(err)}
+}
+$("lentrar").onclick=()=>entrar(false);
+$("lcriar").onclick=()=>entrar(true);
+$("lsenha").onkeydown=e=>{if(e.key==="Enter")entrar(false)};
+$("sair").onclick=async()=>{
+  await au.signOut();
+  itens=[];salvar();render();
+  $("dnuvem").close();
+};
+
+carregar();render();notificar();iniciarNuvem();
 </script>
 </body>
 </html>
