@@ -252,16 +252,17 @@ $("pdf").onclick=()=>{
     const cod=(i.cod||"").trim();
     if(!cod)return; /* só soma produtos que têm código */
     const k=norm(cod);
-    const x=g[k]||(g[k]={cod:cod,nomes:new Set(),cats:new Set(),marcas:new Set(),qtd:0});
-    x.nomes.add(i.nome.trim());x.cats.add(i.cat);x.marcas.add(i.marca.trim());x.qtd+=i.qtd;
+    const x=g[k]||(g[k]={cod:cod,nomes:new Set(),locais:{},qtd:0});
+    x.nomes.add(i.nome.trim());x.locais[i.cat]=(x.locais[i.cat]||0)+i.qtd;x.qtd+=i.qtd;
   });
-  const ks=Object.keys(g).sort((a,b)=>g[a].cod.localeCompare(g[b].cod,"pt-BR",{numeric:true}));
+  /* só entram códigos que estão em mais de um local (categoria) */
+  const ks=Object.keys(g).filter(k=>Object.keys(g[k].locais).length>1)
+    .sort((a,b)=>g[a].cod.localeCompare(g[b].cod,"pt-BR",{numeric:true}));
   let resumo="";
   if(ks.length){
-    const total=ks.reduce((t,k)=>t+g[k].qtd,0);
-    resumo=`<h2>Soma total por código do produto</h2><table><thead><tr><th>Código</th><th>Produto</th><th>Categorias</th><th>Marca</th><th>Quantidade total</th></tr></thead><tbody>`+
-      ks.map(k=>`<tr><td>${esc(g[k].cod)}</td><td>${[...g[k].nomes].map(esc).join(", ")}</td><td>${[...g[k].cats].join(", ")}</td><td>${[...g[k].marcas].map(esc).join(", ")}</td><td>${g[k].qtd}</td></tr>`).join("")+
-      `<tr class="tot"><td colspan="4">Total geral</td><td>${total}</td></tr></tbody></table>`;
+    resumo=`<h2>Soma de produtos com o mesmo código em locais diferentes</h2><table><thead><tr><th>Código</th><th>Produto</th><th>Onde está (quantidade)</th><th>Quantidade total</th></tr></thead><tbody>`+
+      ks.map(k=>`<tr><td>${esc(g[k].cod)}</td><td>${[...g[k].nomes].map(esc).join(", ")}</td><td>${["Capilar","Corporal","Facial"].filter(c=>g[k].locais[c]!=null).map(c=>c+": "+g[k].locais[c]).join(" · ")}</td><td>${g[k].qtd}</td></tr>`).join("")+
+      `</tbody></table>`;
   }
   $("rel").innerHTML=`<h1>Relatório de estoque${filtro==="Todos"?"":" – "+filtro}</h1>
   <p>Gerado em ${hoje} · ${lista.length} produto(s)</p>
