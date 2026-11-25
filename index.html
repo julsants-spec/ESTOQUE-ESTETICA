@@ -57,19 +57,46 @@ dialog h2{margin:0 0 14px}
 footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
 #rel{display:none}
 @media print{
+  @page{size:A4;margin:14mm 12mm 16mm;@bottom-center{content:"Página " counter(page) " de " counter(pages);font:10px system-ui,sans-serif;color:#777}}
   header,main,dialog{display:none!important}
-  body{background:#fff!important;color:#000!important}
-  #rel{display:block;font-family:system-ui,sans-serif}
-  #rel h1{font-size:20px;margin:0 0 4px}
-  #rel p{margin:0 0 12px;font-size:12px}
-  #rel table{width:100%;border-collapse:collapse;font-size:12px}
-  #rel th,#rel td{border:1px solid #888;padding:5px 7px;text-align:left;vertical-align:middle}
-  #rel th{background:#eee}
-  #rel img{width:44px;height:44px;object-fit:cover;border-radius:4px;display:block}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#fff!important;color:#222!important}
+  #rel{display:block;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:11px;line-height:1.4}
+  #rel .top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #7a4fa3;padding-bottom:10px;margin-bottom:16px}
+  #rel h1{font-size:24px;margin:0;color:#4b2a6e;letter-spacing:-.01em}
+  #rel .sub{margin:2px 0 0;color:#666;font-size:11px}
+  #rel .data{text-align:right;color:#666;font-size:11px}
+  #rel .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+  #rel .card{border:1px solid #ddd;border-left:4px solid #7a4fa3;border-radius:6px;padding:8px 12px;background:#faf8fc}
+  #rel .card b{display:block;font-size:20px;line-height:1.1;color:#2a2433}
+  #rel .card span{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.04em}
+  #rel .card.bad{border-left-color:#b3261e;background:#fdf1f0}
+  #rel .card.bad b{color:#b3261e}
+  #rel .card.warn{border-left-color:#d98a00;background:#fff7e8}
+  #rel .card.warn b{color:#a86400}
+  #rel h2{font-size:14px;margin:22px 0 8px;padding-left:8px;border-left:4px solid #7a4fa3;color:#4b2a6e;break-after:avoid}
+  #rel table{width:100%;border-collapse:collapse;font-size:10.5px}
+  #rel thead{display:table-header-group}
+  #rel th{background:#4b2a6e;color:#fff;text-align:left;padding:7px 8px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.03em}
+  #rel td{padding:6px 8px;border-bottom:1px solid #e6e1ec;vertical-align:middle}
+  #rel tbody tr:nth-child(even) td{background:#f7f5fa}
   #rel tr{break-inside:avoid}
-  #rel h2{font-size:15px;margin:18px 0 6px}
-  #rel h3{font-size:13px;margin:12px 0 4px}
-  #rel .tot td{font-weight:700;background:#f2f2f2}
+  #rel td.n{text-align:center;font-weight:700}
+  #rel th.n{text-align:center}
+  #rel img{width:34px;height:34px;object-fit:cover;border-radius:4px;display:block}
+  #rel .nofoto{width:34px;height:34px;border-radius:4px;background:#eee;display:block}
+  #rel .nm{font-weight:600}
+  #rel .mut{color:#666;font-size:10px}
+  #rel .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:9.5px;font-weight:700;white-space:nowrap}
+  #rel .pill.ok{background:#e2f3ea;color:#1f6b45}
+  #rel .pill.warn{background:#fff1db;color:#9a5a00}
+  #rel .pill.bad{background:#fde4e2;color:#b3261e}
+  #rel .cat-Capilar{background:#efe6f8;color:#5a2f86}
+  #rel .cat-Corporal{background:#dff1f1;color:#12595c}
+  #rel .cat-Facial{background:#fde6ef;color:#9c2457}
+  #rel .loc{display:inline-block;margin:1px 4px 1px 0;padding:2px 8px;border-radius:999px;font-size:9.5px;font-weight:700}
+  #rel .nota{margin:6px 0 0;color:#777;font-size:10px}
+  #rel .rodape{margin-top:22px;padding-top:8px;border-top:1px solid #ddd;color:#888;font-size:9.5px;text-align:center}
 }
 </style>
 </head>
@@ -258,18 +285,35 @@ $("pdf").onclick=()=>{
   /* só entram códigos que estão em mais de um local (categoria) */
   const ks=Object.keys(g).filter(k=>Object.keys(g[k].locais).length>1)
     .sort((a,b)=>g[a].cod.localeCompare(g[b].cod,"pt-BR",{numeric:true}));
-  let resumo="";
-  if(ks.length){
-    resumo=`<h2>Soma de produtos com o mesmo código em locais diferentes</h2><table><thead><tr><th>Código</th><th>Produto</th><th>Onde está (quantidade)</th><th>Quantidade total</th></tr></thead><tbody>`+
-      ks.map(k=>`<tr><td>${esc(g[k].cod)}</td><td>${[...g[k].nomes].map(esc).join(", ")}</td><td>${["Capilar","Corporal","Facial"].filter(c=>g[k].locais[c]!=null).map(c=>c+": "+g[k].locais[c]).join(" · ")}</td><td>${g[k].qtd}</td></tr>`).join("")+
-      `</tbody></table>`;
-  }
-  $("rel").innerHTML=`<h1>Relatório de estoque${filtro==="Todos"?"":" – "+filtro}</h1>
-  <p>Gerado em ${hoje} · ${lista.length} produto(s)</p>
+  const temFoto=lista.some(i=>i.foto);
+  const un=lista.reduce((t,i)=>t+i.qtd,0);
+  const nVenc=lista.filter(i=>diasAte(i.val)<0).length;
+  const nProx=lista.filter(i=>{const n=diasAte(i.val);return n>=0&&n<=DIAS_AVISO}).length;
+  const pill=i=>{const st=status(i.val);return `<span class="pill ${st.c}">${st.t}</span>`};
+  const linhas=lista.map(i=>`<tr>`+
+    (temFoto?`<td>${i.foto?`<img src="${i.foto}" alt="">`:`<span class="nofoto"></span>`}</td>`:"")+
+    `<td>${esc(i.cod||"—")}</td>`+
+    `<td><span class="nm">${esc(i.nome)}</span><br><span class="mut">${esc(i.marca)} · ${esc(i.tipo)}</span></td>`+
+    `<td><span class="loc cat-${i.cat}">${i.cat}</span></td>`+
+    `<td>${fmt(i.val)}</td><td>${pill(i)}</td><td class="n">${i.qtd}</td></tr>`).join("");
+  $("rel").innerHTML=`
+  <div class="top">
+    <div><h1>Relatório de estoque</h1><p class="sub">${filtro==="Todos"?"Todas as categorias":"Categoria: "+filtro}${q?" · busca: “"+esc(q)+"”":""}</p></div>
+    <div class="data">Gerado em<br><b>${hoje}</b></div>
+  </div>
+  <div class="cards">
+    <div class="card"><b>${lista.length}</b><span>Produtos</span></div>
+    <div class="card"><b>${un}</b><span>Unidades em estoque</span></div>
+    <div class="card warn"><b>${nProx}</b><span>Perto de vencer</span></div>
+    <div class="card bad"><b>${nVenc}</b><span>Vencidos</span></div>
+  </div>
   <h2>Lista detalhada</h2>
-  <table><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Marca</th><th>Tipo</th><th>Validade</th><th>Qtd</th><th>Situação</th></tr></thead><tbody>`+
-  lista.map(i=>`<tr><td>${esc(i.cod||"")}</td><td>${esc(i.nome)}</td><td>${i.cat}</td><td>${esc(i.marca)}</td><td>${esc(i.tipo)}</td><td>${fmt(i.val)}</td><td>${i.qtd}</td><td>${status(i.val).t}</td></tr>`).join("")+
-  `</tbody></table>${resumo}`;
+  <table><thead><tr>${temFoto?"<th></th>":""}<th>Código</th><th>Produto</th><th>Categoria</th><th>Validade</th><th>Situação</th><th class="n">Qtd</th></tr></thead><tbody>${linhas}</tbody></table>
+  ${ks.length?`<h2>Soma de produtos com o mesmo código em locais diferentes</h2>
+  <table><thead><tr><th>Código</th><th>Produto</th><th>Onde está (quantidade)</th><th class="n">Total</th></tr></thead><tbody>`+
+  ks.map(k=>`<tr><td>${esc(g[k].cod)}</td><td class="nm">${[...g[k].nomes].map(esc).join(", ")}</td><td>${["Capilar","Corporal","Facial"].filter(c=>g[k].locais[c]!=null).map(c=>`<span class="loc cat-${c}">${c}: ${g[k].locais[c]}</span>`).join("")}</td><td class="n">${g[k].qtd}</td></tr>`).join("")+
+  `</tbody></table>`:""}
+  <p class="rodape">Controle de Estoque · relatório gerado em ${hoje}</p>`;
   setTimeout(()=>window.print(),100);
 };
 $("exp").onclick=()=>{
