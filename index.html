@@ -51,6 +51,9 @@ dialog h2{margin:0 0 14px}
 .f .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 #prev{max-height:140px;max-width:100%;border-radius:8px;display:none}
 .act{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.busca-wrap{margin:16px 0 0;font-family:system-ui,sans-serif}
+.busca-lbl{display:block;font-size:.9rem;color:var(--mut);margin-bottom:4px}
+.busca{display:block;width:100%;padding:12px 14px;border:2px solid var(--ac);border-radius:10px;background:var(--card);color:var(--tx);font-size:1rem}
 footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
 #rel{display:none}
 @media print{
@@ -64,6 +67,9 @@ footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
   #rel th{background:#eee}
   #rel img{width:44px;height:44px;object-fit:cover;border-radius:4px;display:block}
   #rel tr{break-inside:avoid}
+  #rel h2{font-size:15px;margin:18px 0 6px}
+  #rel h3{font-size:13px;margin:12px 0 4px}
+  #rel .tot td{font-weight:700;background:#f2f2f2}
 }
 </style>
 </head>
@@ -74,11 +80,12 @@ footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
 </header>
 <main>
   <div id="alerts"></div>
-  <div class="bar" id="cats" role="group" aria-label="Categorias"></div>
-  <div class="bar">
-    <input type="search" id="q" placeholder="Buscar por nome, marca ou tipo">
-    <button class="pri" id="novo">Cadastrar produto</button>
+  <div class="busca-wrap">
+    <label for="q" class="busca-lbl">Pesquisar produto</label>
+    <input type="text" id="q" class="busca" placeholder="Digite o nome, código, marca ou tipo" autocomplete="off">
   </div>
+  <div class="bar" id="cats" role="group" aria-label="Categorias"></div>
+  <div class="bar"><button class="pri" id="novo">Cadastrar produto</button></div>
   <div class="grid" id="list"></div>
   <footer>
     <button class="sec" id="pdf">Exportar PDF</button>
@@ -95,6 +102,7 @@ footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
   <form method="dialog" class="f" id="form">
     <h2 id="dt">Novo produto</h2>
     <label>Nome do produto<input id="nome" required></label>
+    <label>Código do produto<input id="cod" placeholder="Ex.: 7891234567890"></label>
     <div class="two">
       <label>Categoria
         <select id="cat" required>
@@ -161,7 +169,7 @@ function renderCats(){
 }
 function renderLista(){
   const q=$("q").value.trim().toLowerCase();
-  const lista=itens.filter(i=>(filtro==="Todos"||i.cat===filtro)&&(!q||(i.nome+i.marca+i.tipo).toLowerCase().includes(q)))
+  const lista=itens.filter(i=>(filtro==="Todos"||i.cat===filtro)&&(!q||(i.nome+" "+(i.cod||"")+" "+i.marca+" "+i.tipo).toLowerCase().includes(q)))
     .sort((a,b)=>a.val.localeCompare(b.val));
   if(!lista.length){$("list").innerHTML=`<div class="empty" style="grid-column:1/-1">${itens.length?"Nenhum produto encontrado com esse filtro.":"Nenhum produto cadastrado ainda. Clique em “Cadastrar produto” para começar."}</div>`;return}
   $("list").innerHTML=lista.map(i=>{const s=status(i.val);return `
@@ -170,6 +178,7 @@ function renderLista(){
     <div class="bd">
       <h2>${esc(i.nome)}</h2>
       <div class="meta">${esc(i.marca)} · ${esc(i.tipo)} · ${i.cat}</div>
+      ${i.cod?`<div class="meta">Código: ${esc(i.cod)}</div>`:""}
       <div class="meta">Validade: ${fmt(i.val)}</div>
       <span class="tag ${s.c}">${s.t}</span>
       <div class="row">
@@ -187,7 +196,7 @@ function abrir(id){
   editId=id||null;
   const i=itens.find(x=>x.id===id);
   $("dt").textContent=i?"Editar produto":"Novo produto";
-  $("nome").value=i?i.nome:"";$("cat").value=i?i.cat:"Capilar";$("marca").value=i?i.marca:"";
+  $("nome").value=i?i.nome:"";$("cod").value=i?(i.cod||""):"";$("cat").value=i?i.cat:"Capilar";$("marca").value=i?i.marca:"";
   $("tipo").value=i?i.tipo:"";$("val").value=i?i.val:"";$("qtd").value=i?i.qtd:1;$("foto").value="";
   fotoAtual=i?i.foto:"";
   $("prev").style.display=fotoAtual?"block":"none";$("prev").src=fotoAtual;
@@ -211,7 +220,7 @@ $("foto").onchange=async e=>{
   catch(_){alert("Não foi possível ler essa imagem.")}
 };
 $("form").onsubmit=e=>{
-  const o={nome:$("nome").value.trim(),cat:$("cat").value,marca:$("marca").value.trim(),tipo:$("tipo").value.trim(),val:$("val").value,qtd:Math.max(0,parseInt($("qtd").value)||0),foto:fotoAtual};
+  const o={nome:$("nome").value.trim(),cod:$("cod").value.trim(),cat:$("cat").value,marca:$("marca").value.trim(),tipo:$("tipo").value.trim(),val:$("val").value,qtd:Math.max(0,parseInt($("qtd").value)||0),foto:fotoAtual};
   if(editId){Object.assign(itens.find(x=>x.id===editId),o)}
   else itens.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),...o});
   salvar();render();notificar();
@@ -233,14 +242,27 @@ $("list").onclick=e=>{
 
 $("pdf").onclick=()=>{
   const q=$("q").value.trim().toLowerCase();
-  const lista=itens.filter(i=>(filtro==="Todos"||i.cat===filtro)&&(!q||(i.nome+i.marca+i.tipo).toLowerCase().includes(q)))
+  const lista=itens.filter(i=>(filtro==="Todos"||i.cat===filtro)&&(!q||(i.nome+" "+(i.cod||"")+" "+i.marca+" "+i.tipo).toLowerCase().includes(q)))
     .sort((a,b)=>a.val.localeCompare(b.val));
   if(!lista.length)return alert("Não há produtos para exportar.");
   const hoje=new Date().toLocaleDateString("pt-BR");
+  const norm=t=>t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+  let resumo="<h2>Resumo por tipo (soma de todas as marcas)</h2>";
+  ["Capilar","Corporal","Facial"].forEach(c=>{
+    const g={};
+    lista.filter(i=>i.cat===c).forEach(i=>{const k=norm(i.tipo);const x=g[k]||(g[k]={tipo:i.tipo.trim(),marcas:new Set(),qtd:0});x.marcas.add(i.marca);x.qtd+=i.qtd});
+    const ks=Object.keys(g).sort((a,b)=>g[a].tipo.localeCompare(g[b].tipo,"pt-BR"));
+    if(!ks.length)return;
+    const total=ks.reduce((t,k)=>t+g[k].qtd,0);
+    resumo+=`<h3>${c}</h3><table><thead><tr><th>Tipo</th><th>Marcas</th><th>Quantidade total</th></tr></thead><tbody>`+
+      ks.map(k=>`<tr><td>${esc(g[k].tipo)}</td><td>${[...g[k].marcas].map(m=>esc(m)).join(", ")}</td><td>${g[k].qtd}</td></tr>`).join("")+
+      `<tr class="tot"><td colspan="2">Total ${c}</td><td>${total}</td></tr></tbody></table>`;
+  });
   $("rel").innerHTML=`<h1>Relatório de estoque${filtro==="Todos"?"":" – "+filtro}</h1>
   <p>Gerado em ${hoje} · ${lista.length} produto(s)</p>
-  <table><thead><tr><th>Foto</th><th>Produto</th><th>Categoria</th><th>Marca</th><th>Tipo</th><th>Validade</th><th>Qtd</th><th>Situação</th></tr></thead><tbody>`+
-  lista.map(i=>`<tr><td>${i.foto?`<img src="${i.foto}" alt="">`:""}</td><td>${esc(i.nome)}</td><td>${i.cat}</td><td>${esc(i.marca)}</td><td>${esc(i.tipo)}</td><td>${fmt(i.val)}</td><td>${i.qtd}</td><td>${status(i.val).t}</td></tr>`).join("")+
+  ${resumo}<h2>Lista detalhada</h2>
+  <table><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Marca</th><th>Tipo</th><th>Validade</th><th>Qtd</th><th>Situação</th></tr></thead><tbody>`+
+  lista.map(i=>`<tr><td>${esc(i.cod||"")}</td><td>${esc(i.nome)}</td><td>${i.cat}</td><td>${esc(i.marca)}</td><td>${esc(i.tipo)}</td><td>${fmt(i.val)}</td><td>${i.qtd}</td><td>${status(i.val).t}</td></tr>`).join("")+
   `</tbody></table>`;
   setTimeout(()=>window.print(),100);
 };
