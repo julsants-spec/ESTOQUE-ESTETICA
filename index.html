@@ -52,6 +52,19 @@ dialog h2{margin:0 0 14px}
 #prev{max-height:140px;max-width:100%;border-radius:8px;display:none}
 .act{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
+#rel{display:none}
+@media print{
+  header,main,dialog{display:none!important}
+  body{background:#fff!important;color:#000!important}
+  #rel{display:block;font-family:system-ui,sans-serif}
+  #rel h1{font-size:20px;margin:0 0 4px}
+  #rel p{margin:0 0 12px;font-size:12px}
+  #rel table{width:100%;border-collapse:collapse;font-size:12px}
+  #rel th,#rel td{border:1px solid #888;padding:5px 7px;text-align:left;vertical-align:middle}
+  #rel th{background:#eee}
+  #rel img{width:44px;height:44px;object-fit:cover;border-radius:4px;display:block}
+  #rel tr{break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -68,12 +81,15 @@ footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
   </div>
   <div class="grid" id="list"></div>
   <footer>
+    <button class="sec" id="pdf">Exportar PDF</button>
     <button class="sec" id="exp">Exportar backup</button>
     <button class="sec" id="imp">Importar backup</button>
     <button class="sec" id="notif">Ativar notificações</button>
     <input type="file" id="impf" accept="application/json" hidden>
   </footer>
 </main>
+
+<div id="rel"></div>
 
 <dialog id="dlg">
   <form method="dialog" class="f" id="form">
@@ -215,6 +231,19 @@ $("list").onclick=e=>{
   salvar();render();
 };
 
+$("pdf").onclick=()=>{
+  const q=$("q").value.trim().toLowerCase();
+  const lista=itens.filter(i=>(filtro==="Todos"||i.cat===filtro)&&(!q||(i.nome+i.marca+i.tipo).toLowerCase().includes(q)))
+    .sort((a,b)=>a.val.localeCompare(b.val));
+  if(!lista.length)return alert("Não há produtos para exportar.");
+  const hoje=new Date().toLocaleDateString("pt-BR");
+  $("rel").innerHTML=`<h1>Relatório de estoque${filtro==="Todos"?"":" – "+filtro}</h1>
+  <p>Gerado em ${hoje} · ${lista.length} produto(s)</p>
+  <table><thead><tr><th>Foto</th><th>Produto</th><th>Categoria</th><th>Marca</th><th>Tipo</th><th>Validade</th><th>Qtd</th><th>Situação</th></tr></thead><tbody>`+
+  lista.map(i=>`<tr><td>${i.foto?`<img src="${i.foto}" alt="">`:""}</td><td>${esc(i.nome)}</td><td>${i.cat}</td><td>${esc(i.marca)}</td><td>${esc(i.tipo)}</td><td>${fmt(i.val)}</td><td>${i.qtd}</td><td>${status(i.val).t}</td></tr>`).join("")+
+  `</tbody></table>`;
+  setTimeout(()=>window.print(),100);
+};
 $("exp").onclick=()=>{
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([JSON.stringify(itens)],{type:"application/json"}));
