@@ -247,16 +247,21 @@ $("pdf").onclick=()=>{
   if(!lista.length)return alert("Não há produtos para exportar.");
   const hoje=new Date().toLocaleDateString("pt-BR");
   const norm=t=>t.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-  let resumo="<h2>Resumo por tipo (soma de todas as marcas)</h2>";
+  let resumo="<h2>Resumo por código do produto (soma apenas de produtos com o mesmo código)</h2>";
   ["Capilar","Corporal","Facial"].forEach(c=>{
     const g={};
-    lista.filter(i=>i.cat===c).forEach(i=>{const k=norm(i.tipo);const x=g[k]||(g[k]={tipo:i.tipo.trim(),marcas:new Set(),qtd:0});x.marcas.add(i.marca);x.qtd+=i.qtd});
-    const ks=Object.keys(g).sort((a,b)=>g[a].tipo.localeCompare(g[b].tipo,"pt-BR"));
+    lista.filter(i=>i.cat===c).forEach(i=>{
+      const cod=(i.cod||"").trim();
+      const k=cod?"cod:"+norm(cod):"id:"+i.id; /* sem código: não soma com nenhum outro */
+      const x=g[k]||(g[k]={cod:cod,nomes:new Set(),marcas:new Set(),tipos:new Set(),qtd:0});
+      x.nomes.add(i.nome.trim());x.marcas.add(i.marca.trim());x.tipos.add(i.tipo.trim());x.qtd+=i.qtd;
+    });
+    const ks=Object.keys(g).sort((a,b)=>[...g[a].nomes][0].localeCompare([...g[b].nomes][0],"pt-BR"));
     if(!ks.length)return;
     const total=ks.reduce((t,k)=>t+g[k].qtd,0);
-    resumo+=`<h3>${c}</h3><table><thead><tr><th>Tipo</th><th>Marcas</th><th>Quantidade total</th></tr></thead><tbody>`+
-      ks.map(k=>`<tr><td>${esc(g[k].tipo)}</td><td>${[...g[k].marcas].map(m=>esc(m)).join(", ")}</td><td>${g[k].qtd}</td></tr>`).join("")+
-      `<tr class="tot"><td colspan="2">Total ${c}</td><td>${total}</td></tr></tbody></table>`;
+    resumo+=`<h3>${c}</h3><table><thead><tr><th>Código</th><th>Produto</th><th>Marca</th><th>Tipo</th><th>Quantidade total</th></tr></thead><tbody>`+
+      ks.map(k=>`<tr><td>${g[k].cod?esc(g[k].cod):"—"}</td><td>${[...g[k].nomes].map(esc).join(", ")}</td><td>${[...g[k].marcas].map(esc).join(", ")}</td><td>${[...g[k].tipos].map(esc).join(", ")}</td><td>${g[k].qtd}</td></tr>`).join("")+
+      `<tr class="tot"><td colspan="4">Total ${c}</td><td>${total}</td></tr></tbody></table>`;
   });
   $("rel").innerHTML=`<h1>Relatório de estoque${filtro==="Todos"?"":" – "+filtro}</h1>
   <p>Gerado em ${hoje} · ${lista.length} produto(s)</p>
