@@ -63,7 +63,7 @@ footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
 #dnuvem textarea{width:100%;min-height:110px;padding:10px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:.8rem/1.4 ui-monospace,Menlo,Consolas,monospace}
 #dnuvem pre{background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px;font-size:.75rem;overflow:auto;white-space:pre-wrap;margin:4px 0 12px}
 #dnuvem .msg{font-family:system-ui,sans-serif;font-size:.9rem;min-height:1.3em;color:var(--bad);margin:8px 0 0}
-#dnuvem .sec{display:none}#dnuvem .sec.show{display:block}
+#dnuvem .pane{display:none}#dnuvem .pane.show{display:block}
 #dnuvem p{font-family:system-ui,sans-serif;font-size:.92rem;margin:0 0 10px}
 #rel{display:none}
 @media print{
@@ -169,7 +169,7 @@ footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
 <dialog id="dnuvem">
   <h2>Sincronização na nuvem</h2>
 
-  <div class="sec" id="s-cfg">
+  <div class="pane" id="s-cfg">
     <p>Faça isto uma vez (é gratuito). Depois, o mesmo estoque aparece no notebook e no celular.</p>
     <ol>
       <li>Em <b>console.firebase.google.com</b>, crie um projeto (pode desligar o Google Analytics).</li>
@@ -192,7 +192,7 @@ service cloud.firestore {
     <div class="act"><button type="button" class="sec" data-fechar>Fechar</button><button type="button" class="pri" id="cfgsalvar">Salvar configuração</button></div>
   </div>
 
-  <div class="sec" id="s-login">
+  <div class="pane" id="s-login">
     <p>Entre com o mesmo e-mail e senha no notebook e no celular. Se for a primeira vez, clique em “Criar conta”.</p>
     <div class="f">
       <label>E-mail<input type="email" id="lemail" autocomplete="username"></label>
@@ -206,7 +206,7 @@ service cloud.firestore {
     </div>
   </div>
 
-  <div class="sec" id="s-ok">
+  <div class="pane" id="s-ok">
     <p id="okinfo"></p>
     <p style="color:var(--mut)">Tudo que você cadastrar, editar ou excluir aqui aparece nos outros aparelhos conectados. Sem internet, o app continua funcionando e sincroniza quando a conexão voltar.</p>
     <div class="act"><button type="button" class="sec" data-fechar>Fechar</button><button type="button" class="sec del" id="sair">Sair da nuvem</button></div>
