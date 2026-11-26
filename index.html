@@ -66,47 +66,49 @@ footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:30px}
 #dnuvem .pane{display:none}#dnuvem .pane.show{display:block}
 #dnuvem p{font-family:system-ui,sans-serif;font-size:.92rem;margin:0 0 10px}
 #rel{display:none}
+.rel{background:#fff;color:#222;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:11px;line-height:1.4}
+.rel .top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #7a4fa3;padding-bottom:10px;margin-bottom:16px}
+.rel h1{font-size:24px;margin:0;color:#4b2a6e;letter-spacing:-.01em}
+.rel .sub{margin:2px 0 0;color:#666;font-size:11px}
+.rel .data{text-align:right;color:#666;font-size:11px}
+.rel .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.rel .card{border:1px solid #ddd;border-left:4px solid #7a4fa3;border-radius:6px;padding:8px 12px;background:#faf8fc}
+.rel .card b{display:block;font-size:20px;line-height:1.1;color:#2a2433}
+.rel .card span{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.04em}
+.rel .card.bad{border-left-color:#b3261e;background:#fdf1f0}
+.rel .card.bad b{color:#b3261e}
+.rel .card.warn{border-left-color:#d98a00;background:#fff7e8}
+.rel .card.warn b{color:#a86400}
+.rel h2{font-size:14px;margin:22px 0 8px;padding-left:8px;border-left:4px solid #7a4fa3;color:#4b2a6e;break-after:avoid}
+.rel table{width:100%;border-collapse:collapse;font-size:10.5px}
+.rel thead{display:table-header-group}
+.rel th{background:#4b2a6e;color:#fff;text-align:left;padding:7px 8px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.03em}
+.rel td{padding:6px 8px;border-bottom:1px solid #e6e1ec;vertical-align:middle}
+.rel tbody tr:nth-child(even) td{background:#f7f5fa}
+.rel tr{break-inside:avoid}
+.rel td.n{text-align:center;font-weight:700}
+.rel th.n{text-align:center}
+.rel img{width:34px;height:34px;object-fit:cover;border-radius:4px;display:block}
+.rel .nofoto{width:34px;height:34px;border-radius:4px;background:#eee;display:block}
+.rel .nm{font-weight:600}
+.rel .mut{color:#666;font-size:10px}
+.rel .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:9.5px;font-weight:700;white-space:nowrap}
+.rel .pill.ok{background:#e2f3ea;color:#1f6b45}
+.rel .pill.warn{background:#fff1db;color:#9a5a00}
+.rel .pill.bad{background:#fde4e2;color:#b3261e}
+.rel .cat-Capilar{background:#efe6f8;color:#5a2f86}
+.rel .cat-Corporal{background:#dff1f1;color:#12595c}
+.rel .cat-Facial{background:#fde6ef;color:#9c2457}
+.rel .loc{display:inline-block;margin:1px 4px 1px 0;padding:2px 8px;border-radius:999px;font-size:9.5px;font-weight:700}
+.rel .nota{margin:6px 0 0;color:#777;font-size:10px}
+.rel .rodape{margin-top:22px;padding-top:8px;border-top:1px solid #ddd;color:#888;font-size:9.5px;text-align:center}
+.rel *{box-sizing:border-box}
 @media print{
   @page{size:A4;margin:14mm 12mm 16mm;@bottom-center{content:"Página " counter(page) " de " counter(pages);font:10px system-ui,sans-serif;color:#777}}
   header,main,dialog{display:none!important}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{background:#fff!important;color:#222!important}
-  #rel{display:block;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:11px;line-height:1.4}
-  #rel .top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #7a4fa3;padding-bottom:10px;margin-bottom:16px}
-  #rel h1{font-size:24px;margin:0;color:#4b2a6e;letter-spacing:-.01em}
-  #rel .sub{margin:2px 0 0;color:#666;font-size:11px}
-  #rel .data{text-align:right;color:#666;font-size:11px}
-  #rel .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
-  #rel .card{border:1px solid #ddd;border-left:4px solid #7a4fa3;border-radius:6px;padding:8px 12px;background:#faf8fc}
-  #rel .card b{display:block;font-size:20px;line-height:1.1;color:#2a2433}
-  #rel .card span{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.04em}
-  #rel .card.bad{border-left-color:#b3261e;background:#fdf1f0}
-  #rel .card.bad b{color:#b3261e}
-  #rel .card.warn{border-left-color:#d98a00;background:#fff7e8}
-  #rel .card.warn b{color:#a86400}
-  #rel h2{font-size:14px;margin:22px 0 8px;padding-left:8px;border-left:4px solid #7a4fa3;color:#4b2a6e;break-after:avoid}
-  #rel table{width:100%;border-collapse:collapse;font-size:10.5px}
-  #rel thead{display:table-header-group}
-  #rel th{background:#4b2a6e;color:#fff;text-align:left;padding:7px 8px;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.03em}
-  #rel td{padding:6px 8px;border-bottom:1px solid #e6e1ec;vertical-align:middle}
-  #rel tbody tr:nth-child(even) td{background:#f7f5fa}
-  #rel tr{break-inside:avoid}
-  #rel td.n{text-align:center;font-weight:700}
-  #rel th.n{text-align:center}
-  #rel img{width:34px;height:34px;object-fit:cover;border-radius:4px;display:block}
-  #rel .nofoto{width:34px;height:34px;border-radius:4px;background:#eee;display:block}
-  #rel .nm{font-weight:600}
-  #rel .mut{color:#666;font-size:10px}
-  #rel .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:9.5px;font-weight:700;white-space:nowrap}
-  #rel .pill.ok{background:#e2f3ea;color:#1f6b45}
-  #rel .pill.warn{background:#fff1db;color:#9a5a00}
-  #rel .pill.bad{background:#fde4e2;color:#b3261e}
-  #rel .cat-Capilar{background:#efe6f8;color:#5a2f86}
-  #rel .cat-Corporal{background:#dff1f1;color:#12595c}
-  #rel .cat-Facial{background:#fde6ef;color:#9c2457}
-  #rel .loc{display:inline-block;margin:1px 4px 1px 0;padding:2px 8px;border-radius:999px;font-size:9.5px;font-weight:700}
-  #rel .nota{margin:6px 0 0;color:#777;font-size:10px}
-  #rel .rodape{margin-top:22px;padding-top:8px;border-top:1px solid #ddd;color:#888;font-size:9.5px;text-align:center}
+  #rel{display:block!important}
 }
 </style>
 </head>
@@ -213,6 +215,7 @@ service cloud.firestore {
   </div>
 </dialog>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -359,7 +362,7 @@ $("pdf").onclick=()=>{
     `<td><span class="nm">${esc(i.nome)}</span><br><span class="mut">${esc(i.marca)} · ${esc(i.tipo)}</span></td>`+
     `<td><span class="loc cat-${i.cat}">${i.cat}</span></td>`+
     `<td>${fmt(i.val)}</td><td>${pill(i)}</td><td class="n">${i.qtd}</td></tr>`).join("");
-  $("rel").innerHTML=`
+  const html=`<div class="rel">
   <div class="top">
     <div><h1>Relatório de estoque</h1><p class="sub">${filtro==="Todos"?"Todas as categorias":"Categoria: "+filtro}${q?" · busca: “"+esc(q)+"”":""}</p></div>
     <div class="data">Gerado em<br><b>${hoje}</b></div>
@@ -376,9 +379,40 @@ $("pdf").onclick=()=>{
   <table><thead><tr><th>Código</th><th>Produto</th><th>Onde está (quantidade)</th><th>Validades</th><th class="n">Total</th></tr></thead><tbody>`+
   ks.map(k=>`<tr><td>${esc(g[k].cod)}</td><td class="nm">${[...g[k].nomes].map(esc).join(", ")}</td><td>${["Capilar","Corporal","Facial"].filter(c=>g[k].locais[c]!=null).map(c=>`<span class="loc cat-${c}">${c}: ${g[k].locais[c]}</span>`).join("")}</td><td class="mut">${g[k].vals.sort((a,b)=>a.v.localeCompare(b.v)).map(x=>fmt(x.v)+" ("+x.q+")").join("<br>")}</td><td class="n">${g[k].qtd}</td></tr>`).join("")+
   `</tbody></table>`:""}
-  <p class="rodape">Controle de Estoque · relatório gerado em ${hoje}</p>`;
-  setTimeout(()=>window.print(),100);
+  <p class="rodape">Controle de Estoque · relatório gerado em ${hoje}</p></div>`;
+  gerarPDF(html,"relatorio-estoque-"+new Date().toISOString().slice(0,10)+".pdf");
 };
+function imprimir(html){$("rel").innerHTML=html;setTimeout(()=>window.print(),100)}
+async function gerarPDF(html,nome){
+  if(typeof html2pdf==="undefined")return imprimir(html); /* sem a biblioteca (sem internet): usa a impressão */
+  const bt=$("pdf"),txt=bt.textContent;bt.disabled=true;bt.textContent="Gerando PDF…";
+  try{
+    const blob=await html2pdf().set({
+      margin:[12,10,14,10],filename:nome,
+      image:{type:"jpeg",quality:.92},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff"},
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+      pagebreak:{mode:["css","legacy"],avoid:["tr",".cards",".top"]}
+    }).from(html).toPdf().get("pdf").then(pdf=>{
+      const n=pdf.internal.getNumberOfPages(),w=pdf.internal.pageSize.getWidth(),h=pdf.internal.pageSize.getHeight();
+      pdf.setFontSize(8);pdf.setTextColor(120);
+      for(let k=1;k<=n;k++){pdf.setPage(k);pdf.text("Página "+k+" de "+n,w/2,h-6,{align:"center"})}
+    }).outputPdf("blob");
+    const arq=new File([blob],nome,{type:"application/pdf"});
+    const movel=matchMedia("(pointer:coarse)").matches;
+    if(movel&&navigator.canShare&&navigator.canShare({files:[arq]})){
+      try{await navigator.share({files:[arq],title:"Relatório de estoque"});return}
+      catch(e){if(e&&e.name==="AbortError")return}
+    }
+    baixar(blob,nome);
+  }catch(e){console.error(e);alert("Não foi possível gerar o PDF. Vou abrir a tela de impressão; escolha “Salvar como PDF”.");imprimir(html)}
+  finally{bt.disabled=false;bt.textContent=txt}
+}
+function baixar(blob,nome){
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download=nome;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
 $("exp").onclick=()=>{
   const a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([JSON.stringify(itens)],{type:"application/json"}));
